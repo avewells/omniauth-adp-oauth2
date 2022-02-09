@@ -7,6 +7,7 @@ module OmniAuth
   module Strategies
     class AdpOauth2 < OmniAuth::Strategies::OAuth2
       DEFAULT_SCOPE = %w(api openid profile)
+      USER_INFO_URL = 'https://api.adp.com/core/v1/userinfo'
 
       option :name, 'adp_oauth2'
       option :skip_jwt, false
@@ -28,6 +29,29 @@ module OmniAuth
           params[:scope] = DEFAULT_SCOPE.join(' ')
           session['omniauth.state'] = params[:state] if params['state']
         end
+      end
+
+      uid do
+        p "YO"
+        p request.params
+        raw_info['sub']
+      end
+
+      info do
+        {
+          :name => raw_info['name'],
+          :email => raw_info['email'],
+          :first_name => raw_info['given_name'],
+          :last_name => raw_info['family_name'],
+          :organizationOID => raw_info['organizationOID'],
+          :associateOID => raw_info['associateOID']
+        }
+      end
+
+
+      def raw_info
+        p access_token.inspect
+        @raw_info ||= access_token.get(USER_INFO_URL).parsed
       end
 
       private
